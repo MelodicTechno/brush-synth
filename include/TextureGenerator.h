@@ -28,6 +28,10 @@ public:
         int polygonSides; // 3-16
         int shapeEdgeFreq; // 0-50
         int shapeEdgeAmp; // 0-100 (Percentage of radius)
+        
+        // Shape Distortion Params (Phase Warp)
+        int shapeWarpFreq; // 1-20
+        int shapeWarpAmp;  // 0-100 (Phase shift intensity)
 
         // Particle Transform Params
         int particleAngle; // 0-360
@@ -163,20 +167,24 @@ public:
                 for (int j = 0; j <= steps; ++j) {
                     double t = (double)j / steps * 2 * M_PI;
                     
+                    // Apply Phase Warp (Distortion)
+                    double t_warped = t;
+                    if (params.shapeWarpAmp > 0 && params.shapeWarpFreq > 0) {
+                        // sin(t * freq) creates a periodic shift in angle
+                        // Amp controls how strong the shift is
+                        double warp = std::sin(t * params.shapeWarpFreq);
+                        double warpStrength = params.shapeWarpAmp / 50.0; // Scale to reasonable range (0.0 - 2.0 radians)
+                        t_warped += warp * warpStrength;
+                    }
+
                     // Base Shape Radius
                     double currentR = radius;
                     
                     if (n > 0) {
                          // Regular Polygon Polar Formula
-                         // r(t) = R * cos(pi/n) / cos(fmod(t, 2pi/n) - pi/n)
-                         // We need to apply rotation offset to t for the formula?
-                         // Actually, the formula assumes vertices at specific angles.
-                         // Let's adjust t for calculation
+                         // Use warped t for "Liquify" effect on the polygon itself
                          double an = 2 * M_PI / n;
-                         double t_rot = t + rotationOffset; 
-                         // Normalize to 0..2pi
-                         // t_rot = std::fmod(t_rot, 2*M_PI); 
-                         // if (t_rot < 0) t_rot += 2*M_PI;
+                         double t_rot = t_warped + rotationOffset; 
                          
                          // We want fmod(t_rot, an) - an/2
                          double he = std::fmod(t_rot, an);
@@ -189,15 +197,22 @@ public:
 
                     // Edge Modulation (FM Synthesis equivalent)
                     if (params.shapeEdgeFreq > 0 && params.shapeEdgeAmp > 0) {
-                        double wave = std::sin(t * params.shapeEdgeFreq);
+                        // Use warped t for the wave too, creating non-uniform spikes
+                        double wave = std::sin(t_warped * params.shapeEdgeFreq);
                         double phase = i * 13.5; 
-                        wave = std::sin(t * params.shapeEdgeFreq + phase);
+                        wave = std::sin(t_warped * params.shapeEdgeFreq + phase);
                         
                         double ampFactor = params.shapeEdgeAmp / 100.0;
                         currentR *= (1.0 + wave * ampFactor);
                     }
 
-                    double px = currentR * std::cos(t);
+                    double px = currentR * std::cos(t); // Keep original t for position to maintain continuity? 
+                    // No, if we want the shape to actually warp, we should probably use t for position 
+                    // BUT polar coords: (r, theta). If we change r based on t_warped, but plot at t, we get radial distortion.
+                    // If we plot at t_warped, we get angular bunching.
+                    // Let's stick to plotting at 't' but calculating radius based on 't_warped'.
+                    // This creates the "Twist" effect on the shape's features without breaking the circle loop.
+                    
                     double py = currentR * std::sin(t);
                     
                     if (j == 0) path.moveTo(px, py);

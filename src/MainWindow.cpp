@@ -82,6 +82,8 @@ void MainWindow::setupUi() {
     addShapeSetting("Polygon Sides (3-16):", m_polygonSidesSlider, 3, 16, 5);
     addShapeSetting("Edge Frequency (FM Freq):", m_shapeEdgeFreqSlider, 0, 50, 0);
     addShapeSetting("Edge Amplitude (FM Depth %):", m_shapeEdgeAmpSlider, 0, 100, 0);
+    addShapeSetting("Phase Warp Freq (Twist):", m_shapeWarpFreqSlider, 1, 20, 1);
+    addShapeSetting("Phase Warp Amp (Twist Strength):", m_shapeWarpAmpSlider, 0, 100, 0);
 
     settingsLayout->addWidget(shapeGroup);
 
@@ -149,6 +151,8 @@ void MainWindow::generateBrush() {
     params.polygonSides = m_polygonSidesSlider->value();
     params.shapeEdgeFreq = m_shapeEdgeFreqSlider->value();
     params.shapeEdgeAmp = m_shapeEdgeAmpSlider->value();
+    params.shapeWarpFreq = m_shapeWarpFreqSlider->value();
+    params.shapeWarpAmp = m_shapeWarpAmpSlider->value();
 
     params.particleAngle = m_particleAngleSlider->value();
     params.particleAngleJitter = m_particleAngleJitterSlider->value();

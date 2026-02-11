@@ -43,6 +43,8 @@ private:
     QSlider* m_polygonSidesSlider;
     QSlider* m_shapeEdgeFreqSlider;
     QSlider* m_shapeEdgeAmpSlider;
+    QSlider* m_shapeWarpFreqSlider;
+    QSlider* m_shapeWarpAmpSlider;
 
     // Particle Transform Controls
     QSlider* m_particleAngleSlider;
