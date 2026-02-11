@@ -8,6 +8,7 @@ release/
 # IDEs
 .vscode/
 .idea/
+.trae/
 *.sln
 *.vcxproj
 *.vcxproj.filters
