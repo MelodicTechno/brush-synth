@@ -30,6 +30,8 @@ void MainWindow::setupUi() {
         slider = new QSlider(Qt::Horizontal);
         slider->setRange(min, max);
         slider->setValue(val);
+        // Connect slider change to real-time generation
+        connect(slider, &QSlider::valueChanged, this, &MainWindow::generateBrush);
         
         row->addWidget(slider);
         settingsLayout->addLayout(row);
@@ -37,14 +39,16 @@ void MainWindow::setupUi() {
 
     addSetting("Canvas Size:", m_canvasSizeSlider, 64, 2048, 500);
     addSetting("Noise Count:", m_countSlider, 1, 10000, 1000);
-    addSetting("Size Min:", m_sizeMinSlider, 1, 100, 2);
-    addSetting("Size Max:", m_sizeMaxSlider, 1, 100, 10);
-    addSetting("Opacity Min:", m_opacityMinSlider, 1, 255, 50);
-    addSetting("Opacity Max:", m_opacityMaxSlider, 1, 255, 150);
+    addSetting("Size Mean:", m_sizeMeanSlider, 1, 100, 5);
+    addSetting("Size Jitter (%):", m_sizeJitterSlider, 0, 100, 50);
+    addSetting("Opacity Mean:", m_opacityMeanSlider, 1, 255, 128);
+    addSetting("Opacity Jitter (%):", m_opacityJitterSlider, 0, 100, 50);
     addSetting("Roundness (%):", m_roundnessSlider, 1, 100, 100);
     addSetting("Angle (deg):", m_angleSlider, 0, 360, 0);
     addSetting("Falloff (%):", m_falloffSlider, 0, 100, 0);
 
+    // Remove Manual Generate Button if real-time is fast enough, 
+    // but keeping it is fine. User asked for real-time preview logic.
     QPushButton* generateBtn = new QPushButton("Generate", this);
     connect(generateBtn, &QPushButton::clicked, this, &MainWindow::generateBrush);
     settingsLayout->addWidget(generateBtn);
@@ -72,10 +76,10 @@ void MainWindow::generateBrush() {
     TextureGenerator::Parameters params;
     params.canvasSize = m_canvasSizeSlider->value();
     params.count = m_countSlider->value();
-    params.minSize = m_sizeMinSlider->value();
-    params.maxSize = m_sizeMaxSlider->value();
-    params.minOpacity = m_opacityMinSlider->value();
-    params.maxOpacity = m_opacityMaxSlider->value();
+    params.sizeMean = m_sizeMeanSlider->value();
+    params.sizeJitter = m_sizeJitterSlider->value();
+    params.opacityMean = m_opacityMeanSlider->value();
+    params.opacityJitter = m_opacityJitterSlider->value();
     params.roundness = m_roundnessSlider->value();
     params.angle = m_angleSlider->value();
     params.falloff = m_falloffSlider->value();

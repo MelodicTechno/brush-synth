@@ -27,10 +27,10 @@ private:
     PreviewWidget* m_previewWidget;
     
     QSlider* m_countSlider;
-    QSlider* m_sizeMinSlider;
-    QSlider* m_sizeMaxSlider;
-    QSlider* m_opacityMinSlider;
-    QSlider* m_opacityMaxSlider;
+    QSlider* m_sizeMeanSlider;
+    QSlider* m_sizeJitterSlider;
+    QSlider* m_opacityMeanSlider;
+    QSlider* m_opacityJitterSlider;
     QSlider* m_roundnessSlider;
     QSlider* m_angleSlider;
     QSlider* m_falloffSlider;

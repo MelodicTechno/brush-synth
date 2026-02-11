@@ -13,10 +13,10 @@ public:
     struct Parameters {
         int canvasSize;
         int count;
-        int minSize;
-        int maxSize;
-        int minOpacity;
-        int maxOpacity;
+        int sizeMean;      // Average size
+        int sizeJitter;    // 0-100 (Variance percentage)
+        int opacityMean;   // Average opacity
+        int opacityJitter; // 0-100 (Variance percentage)
         int roundness; // 0-100
         int angle;     // 0-360
         int falloff;   // 0-100
@@ -38,21 +38,21 @@ public:
         double cosA = std::cos(angleRad);
         double sinA = std::sin(angleRad);
         double roundnessFactor = params.roundness / 100.0;
-        // Ensure roundness is not 0 to avoid division by zero or infinite flattening, 
-        // though here we multiply, so 0 is fine (line). But usually roundness is > 0.
-        // Let's clamp minimum roundness to 1% for safety/visibility.
         if (roundnessFactor < 0.01) roundnessFactor = 0.01;
 
-        double falloffPower = 1.0 + (params.falloff / 10.0); // 1.0 (linear) to 11.0 (concentrated)
-        // If falloff is 0, we want uniform distribution.
-        // For uniform distribution in a circle, r = sqrt(random).
-        // If we want concentration, we can use r = pow(random, power).
-        // Since random is [0,1], raising to power > 1 makes it smaller (closer to 0).
-        // We want 0 to be center.
-
         for (int i = 0; i < params.count; ++i) {
-            int s = rng->bounded(params.minSize, params.maxSize + 1);
-            int alpha = rng->bounded(params.minOpacity, params.maxOpacity + 1);
+            // Size calculation with Mean and Jitter
+            // Jitter is percentage deviation. E.g. 50 mean, 10 jitter -> range [45, 55] (approx)
+            // Let's implement uniform distribution: [mean * (1 - jitter/100), mean * (1 + jitter/100)]
+            double sizeVar = params.sizeMean * (params.sizeJitter / 100.0);
+            int s = std::round(params.sizeMean + rng->generateDouble() * 2.0 * sizeVar - sizeVar);
+            if (s < 1) s = 1;
+
+            // Opacity calculation with Mean and Jitter
+            double opacityVar = params.opacityMean * (params.opacityJitter / 100.0);
+            int alpha = std::round(params.opacityMean + rng->generateDouble() * 2.0 * opacityVar - opacityVar);
+            if (alpha < 0) alpha = 0;
+            if (alpha > 255) alpha = 255;
 
             // Polar coordinates generation
             double rRand = rng->generateDouble(); // 0..1
