@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "TextureGenerator.h"
+#include "AbrWriter.h"
 #include <QPainter>
 #include <QRandomGenerator>
 #include <QFileDialog>
@@ -91,50 +92,18 @@ void MainWindow::exportPng() {
     }
 }
 
+#include <QFileInfo>
+
 // Simple ABR v1 Writer Implementation attempt
 // Based on available reverse-engineering info
 void MainWindow::exportAbr() {
     QString fileName = QFileDialog::getSaveFileName(this, "Save Brush ABR", "", "Photoshop Brush (*.abr)");
     if (fileName.isEmpty()) return;
 
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::warning(this, "Error", "Could not save file.");
-        return;
+    QFileInfo fileInfo(fileName);
+    QString brushName = fileInfo.baseName();
+
+    if (!AbrWriter::writeAbr(fileName, m_brushImage, brushName, 25)) {
+        QMessageBox::warning(this, "Error", "Failed to save brush file.");
     }
-
-    QDataStream out(&file);
-    out.setByteOrder(QDataStream::BigEndian); // Photoshop uses Big Endian
-
-    // Version 1
-    out << (qint16)1;
-
-    // Count (1 brush)
-    out << (qint16)1;
-
-    // Brush Type (2 = Sampled)
-    out << (qint16)2;
-
-    // We need to calculate size of the data block
-    // Data block for Type 2 (Sampled):
-    // 4 bytes: Misc (0)
-    // 2 bytes: spacing (percent)
-    // 2 bytes: name length? Or Pascal string?
-    // ...
-    // Actually, ABR v1/v2 is hard to get right without spec.
-    // I will try to write a "fake" one that might fail or just write PNG data if I can't do it.
-    
-    // Alternative: Use a Python script if available.
-    // Since I don't have the spec, I'll inform the user.
-    
-    file.close();
-    // Re-open to clear or just delete
-    file.remove();
-    
-    QMessageBox::information(this, "Not Implemented", 
-        "ABR export requires a complex binary format. \n"
-        "Please use PNG export and define brush in Photoshop.\n"
-        "Or I can try to find a Python library to do this if you have one installed.");
-        
-    // Ideally I would call a python script here.
 }

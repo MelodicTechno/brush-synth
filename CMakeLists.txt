@@ -17,12 +17,14 @@ include_directories(include)
 set(SOURCES
     src/main.cpp
     src/MainWindow.cpp
+    src/AbrWriter.cpp
 )
 
 set(HEADERS
     include/MainWindow.h
     include/TextureGenerator.h
     include/PreviewWidget.h
+    include/AbrWriter.h
 )
 
 if(WIN32)

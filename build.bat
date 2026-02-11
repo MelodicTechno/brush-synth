@@ -8,14 +8,14 @@ if not exist build mkdir build
 cd build
 
 echo [INFO] Configuring...
-cmake -G "Ninja" ..
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] CMake configuration failed.
     exit /b %ERRORLEVEL%
 )
 
 echo [INFO] Building...
-cmake --build . --config Debug
+cmake --build .
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Build failed.
     exit /b %ERRORLEVEL%
@@ -23,11 +23,12 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo [INFO] Deploying Qt dependencies...
 if exist brush-synth.exe (
-    "%QT_BIN_DIR%\windeployqt.exe" brush-synth.exe --no-translations --no-system-d3d-compiler
+    echo [INFO] Running windeployqt...
+    "%QT_BIN_DIR%\windeployqt.exe" brush-synth.exe --dir . --no-translations --no-system-d3d-compiler --no-opengl-sw
 ) else (
     echo [WARNING] brush-synth.exe not found in build directory. Skipping deployment.
 )
 
-echo [INFO] Build successful.
+echo [INFO] Build successful. Run build\brush-synth.exe to start.
 cd ..
 endlocal

@@ -20,6 +20,10 @@ public:
         update(); // Trigger repaint
     }
 
+    const QImage& image() const {
+        return m_image;
+    }
+
 protected:
     void paintEvent(QPaintEvent* event) override {
         QPainter painter(this);
