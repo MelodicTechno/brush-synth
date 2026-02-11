@@ -47,6 +47,37 @@ void MainWindow::setupUi() {
     addSetting("Angle (deg):", m_angleSlider, 0, 360, 0);
     addSetting("Falloff (%):", m_falloffSlider, 0, 100, 0);
 
+    // Shape Synthesis UI
+    QGroupBox* shapeGroup = new QGroupBox("Shape Synthesis", this);
+    QVBoxLayout* shapeLayout = new QVBoxLayout(shapeGroup);
+    
+    // Shape Type Combo
+    QHBoxLayout* shapeTypeRow = new QHBoxLayout();
+    shapeTypeRow->addWidget(new QLabel("Base Shape:"));
+    m_shapeCombo = new QComboBox();
+    m_shapeCombo->addItem("Circle (Sine)", 0);
+    m_shapeCombo->addItem("Square (Pulse)", 1);
+    m_shapeCombo->addItem("Triangle (Saw)", 2);
+    connect(m_shapeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::generateBrush);
+    shapeTypeRow->addWidget(m_shapeCombo);
+    shapeLayout->addLayout(shapeTypeRow);
+
+    auto addShapeSetting = [&](QString name, QSlider*& slider, int min, int max, int val) {
+        QHBoxLayout* row = new QHBoxLayout();
+        row->addWidget(new QLabel(name));
+        slider = new QSlider(Qt::Horizontal);
+        slider->setRange(min, max);
+        slider->setValue(val);
+        connect(slider, &QSlider::valueChanged, this, &MainWindow::generateBrush);
+        row->addWidget(slider);
+        shapeLayout->addLayout(row);
+    };
+
+    addShapeSetting("Edge Frequency (FM Freq):", m_shapeEdgeFreqSlider, 0, 50, 0);
+    addShapeSetting("Edge Amplitude (FM Depth %):", m_shapeEdgeAmpSlider, 0, 100, 0);
+
+    settingsLayout->addWidget(shapeGroup);
+
     // Remove Manual Generate Button if real-time is fast enough, 
     // but keeping it is fine. User asked for real-time preview logic.
     QPushButton* generateBtn = new QPushButton("Generate", this);
@@ -83,6 +114,10 @@ void MainWindow::generateBrush() {
     params.roundness = m_roundnessSlider->value();
     params.angle = m_angleSlider->value();
     params.falloff = m_falloffSlider->value();
+    
+    params.shapeId = m_shapeCombo->currentIndex();
+    params.shapeEdgeFreq = m_shapeEdgeFreqSlider->value();
+    params.shapeEdgeAmp = m_shapeEdgeAmpSlider->value();
 
     m_brushImage = TextureGenerator::generate(params);
 

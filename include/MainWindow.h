@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QComboBox>
 #include <QGroupBox>
 #include "PreviewWidget.h"
 
@@ -35,4 +36,9 @@ private:
     QSlider* m_angleSlider;
     QSlider* m_falloffSlider;
     QSlider* m_canvasSizeSlider;
+
+    // Shape Synthesis Controls
+    QComboBox* m_shapeCombo;
+    QSlider* m_shapeEdgeFreqSlider;
+    QSlider* m_shapeEdgeAmpSlider;
 };
