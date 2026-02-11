@@ -32,5 +32,8 @@ private:
     QSlider* m_sizeMaxSlider;
     QSlider* m_opacityMinSlider;
     QSlider* m_opacityMaxSlider;
+    QSlider* m_roundnessSlider;
+    QSlider* m_angleSlider;
+    QSlider* m_falloffSlider;
     QSlider* m_canvasSizeSlider;
 };

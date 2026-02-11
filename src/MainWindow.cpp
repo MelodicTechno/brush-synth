@@ -40,6 +40,9 @@ void MainWindow::setupUi() {
     addSetting("Size Max:", m_sizeMaxSlider, 1, 100, 10);
     addSetting("Opacity Min:", m_opacityMinSlider, 1, 255, 50);
     addSetting("Opacity Max:", m_opacityMaxSlider, 1, 255, 150);
+    addSetting("Roundness (%):", m_roundnessSlider, 1, 100, 100);
+    addSetting("Angle (deg):", m_angleSlider, 0, 360, 0);
+    addSetting("Falloff (%):", m_falloffSlider, 0, 100, 0);
 
     QPushButton* generateBtn = new QPushButton("Generate", this);
     connect(generateBtn, &QPushButton::clicked, this, &MainWindow::generateBrush);
@@ -74,6 +77,9 @@ void MainWindow::generateBrush() {
     params.maxSize = m_sizeMaxSlider->value();
     params.minOpacity = m_opacityMinSlider->value();
     params.maxOpacity = m_opacityMaxSlider->value();
+    params.roundness = m_roundnessSlider->value();
+    params.angle = m_angleSlider->value();
+    params.falloff = m_falloffSlider->value();
 
     m_brushImage = TextureGenerator::generate(params);
 
