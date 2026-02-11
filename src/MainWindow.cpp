@@ -78,6 +78,27 @@ void MainWindow::setupUi() {
 
     settingsLayout->addWidget(shapeGroup);
 
+    // Particle Transform UI
+    QGroupBox* particleTransformGroup = new QGroupBox("Particle Transform", this);
+    QVBoxLayout* ptLayout = new QVBoxLayout(particleTransformGroup);
+
+    auto addPtSetting = [&](QString name, QSlider*& slider, int min, int max, int val) {
+        QHBoxLayout* row = new QHBoxLayout();
+        row->addWidget(new QLabel(name));
+        slider = new QSlider(Qt::Horizontal);
+        slider->setRange(min, max);
+        slider->setValue(val);
+        connect(slider, &QSlider::valueChanged, this, &MainWindow::generateBrush);
+        row->addWidget(slider);
+        ptLayout->addLayout(row);
+    };
+
+    addPtSetting("Particle Angle (deg):", m_particleAngleSlider, 0, 360, 0);
+    addPtSetting("Angle Jitter (%):", m_particleAngleJitterSlider, 0, 100, 0);
+    addPtSetting("Roundness (Stretch %):", m_particleRoundnessSlider, 1, 100, 100);
+
+    settingsLayout->addWidget(particleTransformGroup);
+
     // Remove Manual Generate Button if real-time is fast enough, 
     // but keeping it is fine. User asked for real-time preview logic.
     QPushButton* generateBtn = new QPushButton("Generate", this);
@@ -118,6 +139,10 @@ void MainWindow::generateBrush() {
     params.shapeId = m_shapeCombo->currentIndex();
     params.shapeEdgeFreq = m_shapeEdgeFreqSlider->value();
     params.shapeEdgeAmp = m_shapeEdgeAmpSlider->value();
+
+    params.particleAngle = m_particleAngleSlider->value();
+    params.particleAngleJitter = m_particleAngleJitterSlider->value();
+    params.particleRoundness = m_particleRoundnessSlider->value();
 
     m_brushImage = TextureGenerator::generate(params);
 

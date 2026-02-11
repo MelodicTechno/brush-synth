@@ -26,6 +26,11 @@ public:
         int shapeId; // 0=Circle, 1=Square, 2=Triangle
         int shapeEdgeFreq; // 0-50
         int shapeEdgeAmp; // 0-100 (Percentage of radius)
+
+        // Particle Transform Params
+        int particleAngle; // 0-360
+        int particleAngleJitter; // 0-100%
+        int particleRoundness; // 1-100%
     };
 
     static QImage generate(const Parameters& params) {
@@ -83,10 +88,27 @@ public:
             painter.setBrush(color);
             painter.setPen(Qt::NoPen);
 
-            // Shape Generation
+            // Apply Particle Transform
+            painter.save();
+            painter.translate(finalX, finalY);
+
+            // Rotation
+            double pAngle = params.particleAngle;
+            if (params.particleAngleJitter > 0) {
+                 double jitterRange = 360.0 * (params.particleAngleJitter / 100.0);
+                 pAngle += (rng->generateDouble() - 0.5) * jitterRange; 
+            }
+            painter.rotate(pAngle);
+
+            // Roundness (Scale Y)
+            double pRound = params.particleRoundness / 100.0;
+            if (pRound < 0.01) pRound = 0.01;
+            painter.scale(1.0, pRound); 
+
+            // Shape Generation (Draw at 0,0)
             if (params.shapeId == 0 && params.shapeEdgeFreq == 0) {
                 // Optimization for simple circle
-                painter.drawEllipse(QPointF(finalX, finalY), radius, radius);
+                painter.drawEllipse(QPointF(0, 0), radius, radius);
             } else {
                 QPainterPath path;
                 int steps = 30 + std::min(s, 100); // Dynamic resolution
@@ -105,32 +127,20 @@ public:
                         double t_sq = t - M_PI / 4.0;
                         double scale = std::max(std::abs(std::cos(t_sq)), std::abs(std::sin(t_sq)));
                         if (scale > 0.001) currentR /= scale;
-                        // Compensate area roughly (square of radius R is larger than circle) -> Scale down by 0.88?
                         currentR *= 0.8; 
                     } else if (params.shapeId == 2) { // Triangle
-                        // 3-sided polygon
-                        // r = cos(PI/n) / cos(t % (2PI/n) - PI/n) ??
-                        // Simplified: Mix of 3 sine waves? Or explicit geometric check.
-                        // Let's use polar formula for regular polygon
                         double n = 3.0;
                         double an = 2 * M_PI / n;
                         double t_off = t + M_PI / 6.0; // Rotate to point up
                         double he = std::fmod(t_off, an) - an / 2.0;
                         double scale = std::cos(M_PI / n) / std::cos(he);
-                        currentR /= scale; // This makes it straight lines
-                        currentR *= 0.6; // Scale down
+                        currentR /= scale; 
+                        currentR *= 0.6; 
                     }
 
                     // Edge Modulation (FM Synthesis equivalent)
                     if (params.shapeEdgeFreq > 0 && params.shapeEdgeAmp > 0) {
                         double wave = std::sin(t * params.shapeEdgeFreq);
-                        // Add some randomness/phase shift per particle? 
-                        // params don't carry per-particle ID, but we have rng.
-                        // But if we use rng inside the loop, it's noise. 
-                        // We want consistent shape per particle.
-                        // We can add a random phase offset based on particle index 'i'?
-                        // But 'i' loop is outside.
-                        // Let's use 'i' to seed a phase.
                         double phase = i * 13.5; 
                         wave = std::sin(t * params.shapeEdgeFreq + phase);
                         
@@ -146,10 +156,10 @@ public:
                 }
                 path.closeSubpath();
                 
-                // Translate path to final position
-                path.translate(finalX, finalY);
+                // No translation needed, we are at 0,0 local space
                 painter.drawPath(path);
             }
+            painter.restore();
         }
 
         return image;

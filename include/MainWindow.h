@@ -41,4 +41,9 @@ private:
     QComboBox* m_shapeCombo;
     QSlider* m_shapeEdgeFreqSlider;
     QSlider* m_shapeEdgeAmpSlider;
+
+    // Particle Transform Controls
+    QSlider* m_particleAngleSlider;
+    QSlider* m_particleAngleJitterSlider;
+    QSlider* m_particleRoundnessSlider;
 };
