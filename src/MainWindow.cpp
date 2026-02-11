@@ -1,6 +1,5 @@
 #include "MainWindow.h"
 #include "TextureGenerator.h"
-#include "AbrWriter.h"
 #include <QPainter>
 #include <QRandomGenerator>
 #include <QFileDialog>
@@ -114,10 +113,6 @@ void MainWindow::setupUi() {
     connect(exportPngBtn, &QPushButton::clicked, this, &MainWindow::exportPng);
     settingsLayout->addWidget(exportPngBtn);
 
-    QPushButton* exportAbrBtn = new QPushButton("Export ABR", this);
-    connect(exportAbrBtn, &QPushButton::clicked, this, &MainWindow::exportAbr);
-    settingsLayout->addWidget(exportAbrBtn);
-
     mainLayout->addWidget(settingsGroup, 1);
 
     // Preview Panel
@@ -158,21 +153,5 @@ void MainWindow::exportPng() {
     QString fileName = QFileDialog::getSaveFileName(this, "Save Brush PNG", "", "Images (*.png)");
     if (!fileName.isEmpty()) {
         m_brushImage.save(fileName);
-    }
-}
-
-#include <QFileInfo>
-
-// Simple ABR v1 Writer Implementation attempt
-// Based on available reverse-engineering info
-void MainWindow::exportAbr() {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save Brush ABR", "", "Photoshop Brush (*.abr)");
-    if (fileName.isEmpty()) return;
-
-    QFileInfo fileInfo(fileName);
-    QString brushName = fileInfo.baseName();
-
-    if (!AbrWriter::writeAbr(fileName, m_brushImage, brushName, 25)) {
-        QMessageBox::warning(this, "Error", "Failed to save brush file.");
     }
 }

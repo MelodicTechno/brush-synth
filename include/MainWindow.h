@@ -18,7 +18,6 @@ public:
 
 private slots:
     void generateBrush();
-    void exportAbr();
     void exportPng();
 
 private:
