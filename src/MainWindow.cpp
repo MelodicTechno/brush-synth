@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "TextureGenerator.h"
 #include <QPainter>
 #include <QRandomGenerator>
 #include <QFileDialog>
@@ -66,39 +67,15 @@ void MainWindow::setupUi() {
 }
 
 void MainWindow::generateBrush() {
-    int size = m_canvasSizeSlider->value();
-    m_brushImage = QImage(size, size, QImage::Format_ARGB32);
-    m_brushImage.fill(Qt::transparent);
+    TextureGenerator::Parameters params;
+    params.canvasSize = m_canvasSizeSlider->value();
+    params.count = m_countSlider->value();
+    params.minSize = m_sizeMinSlider->value();
+    params.maxSize = m_sizeMaxSlider->value();
+    params.minOpacity = m_opacityMinSlider->value();
+    params.maxOpacity = m_opacityMaxSlider->value();
 
-    QPainter painter(&m_brushImage);
-    painter.setRenderHint(QPainter::Antialiasing);
-
-    int count = m_countSlider->value();
-    int minSize = m_sizeMinSlider->value();
-    int maxSize = m_sizeMaxSlider->value();
-    int minOp = m_opacityMinSlider->value();
-    int maxOp = m_opacityMaxSlider->value();
-
-    auto* rng = QRandomGenerator::global();
-
-    for (int i = 0; i < count; ++i) {
-        int s = rng->bounded(minSize, maxSize + 1);
-        int alpha = rng->bounded(minOp, maxOp + 1);
-        int x = rng->bounded(0, size);
-        int y = rng->bounded(0, size);
-
-        // Draw centered noise
-        // Actually, user said "generate brush pattern". Usually centered with falloff?
-        // But user said "set noise count to generate from thin air" (create from nothing).
-        // Let's just scatter points for now.
-        // Maybe concentrate in the center?
-        // Let's do a simple random scatter.
-        
-        QColor color(0, 0, 0, alpha);
-        painter.setBrush(color);
-        painter.setPen(Qt::NoPen);
-        painter.drawEllipse(QPoint(x, y), s/2, s/2);
-    }
+    m_brushImage = TextureGenerator::generate(params);
 
     m_previewLabel->setPixmap(QPixmap::fromImage(m_brushImage).scaled(m_previewLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
