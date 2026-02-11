@@ -61,10 +61,8 @@ void MainWindow::setupUi() {
     mainLayout->addWidget(settingsGroup, 1);
 
     // Preview Panel
-    m_previewLabel = new QLabel(this);
-    m_previewLabel->setAlignment(Qt::AlignCenter);
-    m_previewLabel->setStyleSheet("background-color: #ccc; border: 1px solid #999;");
-    mainLayout->addWidget(m_previewLabel, 3);
+    m_previewWidget = new PreviewWidget(this);
+    mainLayout->addWidget(m_previewWidget, 3);
     
     resize(800, 600);
 }
@@ -83,7 +81,7 @@ void MainWindow::generateBrush() {
 
     m_brushImage = TextureGenerator::generate(params);
 
-    m_previewLabel->setPixmap(QPixmap::fromImage(m_brushImage).scaled(m_previewLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    m_previewWidget->setImage(m_brushImage);
 }
 
 void MainWindow::exportPng() {

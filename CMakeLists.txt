@@ -21,8 +21,14 @@ set(SOURCES
 
 set(HEADERS
     include/MainWindow.h
+    include/TextureGenerator.h
+    include/PreviewWidget.h
 )
 
-add_executable(brush-synth ${SOURCES} ${HEADERS})
+if(WIN32)
+    add_executable(brush-synth ${SOURCES} ${HEADERS})
+else()
+    add_executable(brush-synth ${SOURCES} ${HEADERS})
+endif()
 
 target_link_libraries(brush-synth PRIVATE Qt6::Widgets Qt6::Gui Qt6::Core)

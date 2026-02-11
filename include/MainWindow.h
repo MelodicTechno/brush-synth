@@ -4,11 +4,11 @@
 #include <QImage>
 #include <QLabel>
 #include <QSlider>
-#include <QSpinBox>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
+#include "PreviewWidget.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -22,10 +22,9 @@ private slots:
 
 private:
     void setupUi();
-    void drawNoise();
 
     QImage m_brushImage;
-    QLabel* m_previewLabel;
+    PreviewWidget* m_previewWidget;
     
     QSlider* m_countSlider;
     QSlider* m_sizeMinSlider;
