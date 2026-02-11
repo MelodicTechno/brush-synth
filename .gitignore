@@ -1,0 +1,13 @@
+# Build directory
+build/
+*.exe
+*.obj
+*.o
+
+# IDEs
+.vscode/
+.idea/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
