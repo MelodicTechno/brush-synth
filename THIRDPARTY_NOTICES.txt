@@ -1,0 +1,11 @@
+Brush Synth Third-Party Notices
+================================================================================
+
+This software uses the Qt Toolkit (http://www.qt.io).
+Qt is licensed under the GNU Lesser General Public License (LGPL) version 3.
+Qt is a registered trademark of The Qt Company Ltd. and/or its subsidiaries.
+
+You can find the text of the LGPLv3 in: licenses/Qt_LGPLv3.txt
+The LGPLv3 supplements the GNU General Public License (GPL) version 3, which is available in: LICENSE
+
+Source code for Qt can be obtained from http://www.qt.io/download
