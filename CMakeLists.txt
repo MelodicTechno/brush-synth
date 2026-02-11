@@ -27,6 +27,7 @@ set(HEADERS
 
 if(WIN32)
     add_executable(brush-synth ${SOURCES} ${HEADERS})
+    target_link_options(brush-synth PRIVATE -mwindows)
 else()
     add_executable(brush-synth ${SOURCES} ${HEADERS})
 endif()
