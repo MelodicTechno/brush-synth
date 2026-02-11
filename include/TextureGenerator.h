@@ -21,9 +21,11 @@ public:
         int roundness; // 0-100
         int angle;     // 0-360
         int falloff;   // 0-100
+        int distributionSquareness; // 0-100
 
         // Shape Synthesis Params
-        int shapeId; // 0=Circle, 1=Square, 2=Triangle
+        int shapeId; // 0=Circle, 1=Triangle, 2=Square, 3=Polygon
+        int polygonSides; // 3-16
         int shapeEdgeFreq; // 0-50
         int shapeEdgeAmp; // 0-100 (Percentage of radius)
 
@@ -78,6 +80,20 @@ public:
 
             double u = r * std::cos(theta);
             double v = r * std::sin(theta);
+            
+            // Apply Distribution Squareness
+            if (params.distributionSquareness > 0) {
+                 // Square boundary max radius at this angle
+                 double absCos = std::abs(std::cos(theta));
+                 double absSin = std::abs(std::sin(theta));
+                 double maxR_sq = 1.0 / std::max(absCos, absSin);
+                 
+                 // Interpolate between Circle (1.0) and Square (maxR_sq)
+                 double scaleF = 1.0 + (params.distributionSquareness / 100.0) * (maxR_sq - 1.0);
+                 u *= scaleF;
+                 v *= scaleF;
+            }
+
             v *= roundnessFactor;
             double xRot = u * cosA - v * sinA;
             double yRot = u * sinA + v * cosA;
@@ -114,28 +130,47 @@ public:
                 int steps = 30 + std::min(s, 100); // Dynamic resolution
                 if (params.shapeEdgeFreq > 0) steps = std::max(steps, params.shapeEdgeFreq * 4); // Increase resolution for high freq
                 
+                // Determine Polygon Properties
+                double n = 0; // 0 means circle
+                double rotationOffset = 0;
+                
+                if (params.shapeId == 1) { // Triangle
+                    n = 3.0;
+                    rotationOffset = M_PI / 6.0; // Rotate to point up
+                } else if (params.shapeId == 2) { // Square
+                    n = 4.0;
+                    rotationOffset = M_PI / 4.0; // Rotate to align with axes
+                } else if (params.shapeId == 3) { // Polygon
+                    n = (double)params.polygonSides;
+                    rotationOffset = -M_PI / 2.0; // Usually start at top
+                    if (n < 3) n = 3;
+                }
+
                 for (int j = 0; j <= steps; ++j) {
                     double t = (double)j / steps * 2 * M_PI;
                     
                     // Base Shape Radius
                     double currentR = radius;
                     
-                    // Shape Type Modulation
-                    if (params.shapeId == 1) { // Square
-                        // Polar equation for square: r = 1 / max(|cos|, |sin|)
-                        // Rotate by 45 deg (PI/4) to align square
-                        double t_sq = t - M_PI / 4.0;
-                        double scale = std::max(std::abs(std::cos(t_sq)), std::abs(std::sin(t_sq)));
-                        if (scale > 0.001) currentR /= scale;
-                        currentR *= 0.8; 
-                    } else if (params.shapeId == 2) { // Triangle
-                        double n = 3.0;
-                        double an = 2 * M_PI / n;
-                        double t_off = t + M_PI / 6.0; // Rotate to point up
-                        double he = std::fmod(t_off, an) - an / 2.0;
-                        double scale = std::cos(M_PI / n) / std::cos(he);
-                        currentR /= scale; 
-                        currentR *= 0.6; 
+                    if (n > 0) {
+                         // Regular Polygon Polar Formula
+                         // r(t) = R * cos(pi/n) / cos(fmod(t, 2pi/n) - pi/n)
+                         // We need to apply rotation offset to t for the formula?
+                         // Actually, the formula assumes vertices at specific angles.
+                         // Let's adjust t for calculation
+                         double an = 2 * M_PI / n;
+                         double t_rot = t + rotationOffset; 
+                         // Normalize to 0..2pi
+                         // t_rot = std::fmod(t_rot, 2*M_PI); 
+                         // if (t_rot < 0) t_rot += 2*M_PI;
+                         
+                         // We want fmod(t_rot, an) - an/2
+                         double he = std::fmod(t_rot, an);
+                         if (he < 0) he += an;
+                         he -= an / 2.0;
+                         
+                         double scale = std::cos(M_PI / n) / std::cos(he);
+                         currentR *= scale; 
                     }
 
                     // Edge Modulation (FM Synthesis equivalent)

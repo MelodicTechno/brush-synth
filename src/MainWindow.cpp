@@ -46,6 +46,7 @@ void MainWindow::setupUi() {
     addSetting("Roundness (%):", m_roundnessSlider, 1, 100, 100);
     addSetting("Angle (deg):", m_angleSlider, 0, 360, 0);
     addSetting("Falloff (%):", m_falloffSlider, 0, 100, 0);
+    addSetting("Distribution Squareness:", m_distributionSquarenessSlider, 0, 100, 0);
 
     // Shape Synthesis UI
     QGroupBox* shapeGroup = new QGroupBox("Shape Synthesis", this);
@@ -53,11 +54,12 @@ void MainWindow::setupUi() {
     
     // Shape Type Combo
     QHBoxLayout* shapeTypeRow = new QHBoxLayout();
-    shapeTypeRow->addWidget(new QLabel("Base Shape:"));
+    shapeTypeRow->addWidget(new QLabel("Shape Type:"));
     m_shapeCombo = new QComboBox();
-    m_shapeCombo->addItem("Circle (Sine)", 0);
-    m_shapeCombo->addItem("Square (Pulse)", 1);
-    m_shapeCombo->addItem("Triangle (Saw)", 2);
+    m_shapeCombo->addItem("Circle", 0);
+    m_shapeCombo->addItem("Triangle", 1);
+    m_shapeCombo->addItem("Square", 2);
+    m_shapeCombo->addItem("Polygon", 3);
     connect(m_shapeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::generateBrush);
     shapeTypeRow->addWidget(m_shapeCombo);
     shapeLayout->addLayout(shapeTypeRow);
@@ -73,6 +75,7 @@ void MainWindow::setupUi() {
         shapeLayout->addLayout(row);
     };
 
+    addShapeSetting("Polygon Sides (3-16):", m_polygonSidesSlider, 3, 16, 5);
     addShapeSetting("Edge Frequency (FM Freq):", m_shapeEdgeFreqSlider, 0, 50, 0);
     addShapeSetting("Edge Amplitude (FM Depth %):", m_shapeEdgeAmpSlider, 0, 100, 0);
 
@@ -135,8 +138,10 @@ void MainWindow::generateBrush() {
     params.roundness = m_roundnessSlider->value();
     params.angle = m_angleSlider->value();
     params.falloff = m_falloffSlider->value();
+    params.distributionSquareness = m_distributionSquarenessSlider->value();
     
     params.shapeId = m_shapeCombo->currentIndex();
+    params.polygonSides = m_polygonSidesSlider->value();
     params.shapeEdgeFreq = m_shapeEdgeFreqSlider->value();
     params.shapeEdgeAmp = m_shapeEdgeAmpSlider->value();
 

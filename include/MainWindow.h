@@ -35,10 +35,12 @@ private:
     QSlider* m_roundnessSlider;
     QSlider* m_angleSlider;
     QSlider* m_falloffSlider;
+    QSlider* m_distributionSquarenessSlider;
     QSlider* m_canvasSizeSlider;
 
     // Shape Synthesis Controls
     QComboBox* m_shapeCombo;
+    QSlider* m_polygonSidesSlider;
     QSlider* m_shapeEdgeFreqSlider;
     QSlider* m_shapeEdgeAmpSlider;
 
