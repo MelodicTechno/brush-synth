@@ -1,5 +1,6 @@
 # Build directory
 build/
+release/
 *.exe
 *.obj
 *.o

@@ -36,16 +36,20 @@ protected:
         }
 
         // Calculate scaled rect to keep aspect ratio
-        QSize widgetSize = size();
+        // Add some padding (10px) so the image doesn't touch the widget border
+        int padding = 10;
+        QSize widgetSize = size() - QSize(padding * 2, padding * 2);
+        if (widgetSize.width() <= 0 || widgetSize.height() <= 0) return;
+
         QSize imageSize = m_image.size();
         
         if (imageSize.isEmpty()) return;
 
         QSize scaledSize = imageSize.scaled(widgetSize, Qt::KeepAspectRatio);
         
-        // Center the image
-        int x = (widgetSize.width() - scaledSize.width()) / 2;
-        int y = (widgetSize.height() - scaledSize.height()) / 2;
+        // Center the image (account for padding)
+        int x = (width() - scaledSize.width()) / 2;
+        int y = (height() - scaledSize.height()) / 2;
         
         QRect targetRect(x, y, scaledSize.width(), scaledSize.height());
         

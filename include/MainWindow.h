@@ -19,6 +19,7 @@ public:
 private slots:
     void generateBrush();
     void exportPng();
+    void copyToClipboard();
 
 private:
     void setupUi();

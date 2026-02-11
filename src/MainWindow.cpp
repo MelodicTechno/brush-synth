@@ -7,6 +7,8 @@
 #include <QBuffer>
 #include <QDataStream>
 #include <QFile>
+#include <QClipboard>
+#include <QApplication>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     setupUi();
@@ -20,6 +22,7 @@ void MainWindow::setupUi() {
 
     // Settings Panel
     QGroupBox* settingsGroup = new QGroupBox("Settings", this);
+    settingsGroup->setMinimumWidth(320); // Ensure panel is wide enough
     QVBoxLayout* settingsLayout = new QVBoxLayout(settingsGroup);
 
     auto addSetting = [&](QString name, QSlider*& slider, int min, int max, int val) {
@@ -29,6 +32,7 @@ void MainWindow::setupUi() {
         slider = new QSlider(Qt::Horizontal);
         slider->setRange(min, max);
         slider->setValue(val);
+        slider->setMinimumWidth(100); // Ensure slider doesn't collapse to a dot
         // Connect slider change to real-time generation
         connect(slider, &QSlider::valueChanged, this, &MainWindow::generateBrush);
         
@@ -69,6 +73,7 @@ void MainWindow::setupUi() {
         slider = new QSlider(Qt::Horizontal);
         slider->setRange(min, max);
         slider->setValue(val);
+        slider->setMinimumWidth(100);
         connect(slider, &QSlider::valueChanged, this, &MainWindow::generateBrush);
         row->addWidget(slider);
         shapeLayout->addLayout(row);
@@ -90,6 +95,7 @@ void MainWindow::setupUi() {
         slider = new QSlider(Qt::Horizontal);
         slider->setRange(min, max);
         slider->setValue(val);
+        slider->setMinimumWidth(100);
         connect(slider, &QSlider::valueChanged, this, &MainWindow::generateBrush);
         row->addWidget(slider);
         ptLayout->addLayout(row);
@@ -112,6 +118,10 @@ void MainWindow::setupUi() {
     QPushButton* exportPngBtn = new QPushButton("Export PNG", this);
     connect(exportPngBtn, &QPushButton::clicked, this, &MainWindow::exportPng);
     settingsLayout->addWidget(exportPngBtn);
+
+    QPushButton* copyClipboardBtn = new QPushButton("Copy to Clipboard", this);
+    connect(copyClipboardBtn, &QPushButton::clicked, this, &MainWindow::copyToClipboard);
+    settingsLayout->addWidget(copyClipboardBtn);
 
     mainLayout->addWidget(settingsGroup, 1);
 
@@ -154,4 +164,11 @@ void MainWindow::exportPng() {
     if (!fileName.isEmpty()) {
         m_brushImage.save(fileName);
     }
+}
+
+void MainWindow::copyToClipboard() {
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->setImage(m_brushImage);
+    // Optional: Feedback to user
+    // QMessageBox::information(this, "Copied", "Brush image copied to clipboard.");
 }

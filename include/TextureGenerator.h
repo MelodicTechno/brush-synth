@@ -45,7 +45,21 @@ public:
         auto* rng = QRandomGenerator::global();
         double centerX = params.canvasSize / 2.0;
         double centerY = params.canvasSize / 2.0;
-        double maxRadius = params.canvasSize / 2.0;
+        
+        // Calculate max particle radius to avoid clipping
+        double sizeVar = params.sizeMean * (params.sizeJitter / 100.0);
+        double maxSize = params.sizeMean + sizeVar;
+        double maxParticleRadius = maxSize / 2.0;
+        
+        // Account for Edge Modulation (Amplitude)
+        if (params.shapeEdgeAmp > 0) {
+            maxParticleRadius *= (1.0 + params.shapeEdgeAmp / 100.0);
+        }
+        
+        // Ensure we don't reduce radius to negative
+        double margin = maxParticleRadius + 2.0; // +2 for safety
+        double maxRadius = (params.canvasSize / 2.0) - margin;
+        if (maxRadius < 1.0) maxRadius = 1.0;
 
         double angleRad = params.angle * M_PI / 180.0;
         double cosA = std::cos(angleRad);
