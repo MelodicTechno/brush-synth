@@ -27,10 +27,10 @@ private:
     QImage m_brushImage;
     QLabel* m_previewLabel;
     
-    QSpinBox* m_countSpin;
-    QSpinBox* m_sizeMinSpin;
-    QSpinBox* m_sizeMaxSpin;
-    QSpinBox* m_opacityMinSpin;
-    QSpinBox* m_opacityMaxSpin;
-    QSpinBox* m_canvasSizeSpin;
+    QSlider* m_countSlider;
+    QSlider* m_sizeMinSlider;
+    QSlider* m_sizeMaxSlider;
+    QSlider* m_opacityMinSlider;
+    QSlider* m_opacityMaxSlider;
+    QSlider* m_canvasSizeSlider;
 };

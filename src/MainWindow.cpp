@@ -21,22 +21,24 @@ void MainWindow::setupUi() {
     QGroupBox* settingsGroup = new QGroupBox("Settings", this);
     QVBoxLayout* settingsLayout = new QVBoxLayout(settingsGroup);
 
-    auto addSetting = [&](QString name, QSpinBox*& spin, int min, int max, int val) {
+    auto addSetting = [&](QString name, QSlider*& slider, int min, int max, int val) {
         QHBoxLayout* row = new QHBoxLayout();
         row->addWidget(new QLabel(name));
-        spin = new QSpinBox();
-        spin->setRange(min, max);
-        spin->setValue(val);
-        row->addWidget(spin);
+        
+        slider = new QSlider(Qt::Horizontal);
+        slider->setRange(min, max);
+        slider->setValue(val);
+        
+        row->addWidget(slider);
         settingsLayout->addLayout(row);
     };
 
-    addSetting("Canvas Size:", m_canvasSizeSpin, 64, 2048, 500);
-    addSetting("Noise Count:", m_countSpin, 1, 10000, 1000);
-    addSetting("Size Min:", m_sizeMinSpin, 1, 100, 2);
-    addSetting("Size Max:", m_sizeMaxSpin, 1, 100, 10);
-    addSetting("Opacity Min:", m_opacityMinSpin, 1, 255, 50);
-    addSetting("Opacity Max:", m_opacityMaxSpin, 1, 255, 150);
+    addSetting("Canvas Size:", m_canvasSizeSlider, 64, 2048, 500);
+    addSetting("Noise Count:", m_countSlider, 1, 10000, 1000);
+    addSetting("Size Min:", m_sizeMinSlider, 1, 100, 2);
+    addSetting("Size Max:", m_sizeMaxSlider, 1, 100, 10);
+    addSetting("Opacity Min:", m_opacityMinSlider, 1, 255, 50);
+    addSetting("Opacity Max:", m_opacityMaxSlider, 1, 255, 150);
 
     QPushButton* generateBtn = new QPushButton("Generate", this);
     connect(generateBtn, &QPushButton::clicked, this, &MainWindow::generateBrush);
@@ -64,18 +66,18 @@ void MainWindow::setupUi() {
 }
 
 void MainWindow::generateBrush() {
-    int size = m_canvasSizeSpin->value();
+    int size = m_canvasSizeSlider->value();
     m_brushImage = QImage(size, size, QImage::Format_ARGB32);
     m_brushImage.fill(Qt::transparent);
 
     QPainter painter(&m_brushImage);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    int count = m_countSpin->value();
-    int minSize = m_sizeMinSpin->value();
-    int maxSize = m_sizeMaxSpin->value();
-    int minOp = m_opacityMinSpin->value();
-    int maxOp = m_opacityMaxSpin->value();
+    int count = m_countSlider->value();
+    int minSize = m_sizeMinSlider->value();
+    int maxSize = m_sizeMaxSlider->value();
+    int minOp = m_opacityMinSlider->value();
+    int maxOp = m_opacityMaxSlider->value();
 
     auto* rng = QRandomGenerator::global();
 
