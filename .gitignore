@@ -8,8 +8,6 @@ release/
 # IDEs
 .vscode/
 .idea/
-.trae/
-*.sln
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
+
+# User Content
+presets/

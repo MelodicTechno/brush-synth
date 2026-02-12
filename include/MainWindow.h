@@ -9,6 +9,14 @@
 #include <QHBoxLayout>
 #include <QComboBox>
 #include <QGroupBox>
+#include <QTabWidget>
+#include <QListWidget>
+#include <QLineEdit>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QDir>
+#include <QFileInfo>
 #include "PreviewWidget.h"
 
 class MainWindow : public QMainWindow {
@@ -21,8 +29,16 @@ private slots:
     void exportPng();
     void copyToClipboard();
 
+    void savePreset();
+    void loadPreset();
+    void deletePreset();
+    void refreshPresets();
+
 private:
     void setupUi();
+    
+    QJsonObject serializeSettings();
+    void deserializeSettings(const QJsonObject& json);
 
     QImage m_brushImage;
     PreviewWidget* m_previewWidget;
@@ -67,4 +83,13 @@ private:
     QSlider* m_particleRoundnessSlider;
 
     bool m_isInitializing = true;
+    
+    // Preset UI
+    QTabWidget* m_tabWidget;
+    QListWidget* m_presetList;
+    QLineEdit* m_presetNameEdit;
+    QPushButton* m_savePresetButton;
+    QPushButton* m_loadPresetButton;
+    QPushButton* m_deletePresetButton;
+    QPushButton* m_refreshPresetsButton;
 };
