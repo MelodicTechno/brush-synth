@@ -22,6 +22,8 @@ public:
         int angle;     // 0-360
         int falloff;   // 0-100
         int distributionSquareness; // 0-100
+        int distType; // 0=Random, 1=Grid, 2=Spiral
+        int distJitter; // 0-100
 
         // Shape Synthesis Params
         int shapeId; // 0=Circle, 1=Triangle, 2=Square, 3=Polygon
@@ -152,32 +154,68 @@ public:
             if (alpha < 0) alpha = 0;
             if (alpha > 255) alpha = 255;
 
-            // Distribution logic
-            double rRand = rng->generateDouble(); 
-            double r;
-            if (params.falloff == 0) {
-                 r = std::sqrt(rRand);
-            } else {
-                 double p = 1.0 + (params.falloff / 20.0); 
-                 r = std::pow(rRand, p);
-            }
-            r *= maxRadius;
-            double theta = rng->generateDouble() * 2 * M_PI;
-
-            double u = r * std::cos(theta);
-            double v = r * std::sin(theta);
+            // Distribution Logic
+            double u, v;
             
-            // Apply Distribution Squareness
-            if (params.distributionSquareness > 0) {
-                 // Square boundary max radius at this angle
-                 double absCos = std::abs(std::cos(theta));
-                 double absSin = std::abs(std::sin(theta));
-                 double maxR_sq = 1.0 / std::max(absCos, absSin);
-                 
-                 // Interpolate between Circle (1.0) and Square (maxR_sq)
-                 double scaleF = 1.0 + (params.distributionSquareness / 100.0) * (maxR_sq - 1.0);
-                 u *= scaleF;
-                 v *= scaleF;
+            if (params.distType == 1) { // Grid
+                int side = std::ceil(std::sqrt(params.count));
+                if (side < 1) side = 1;
+                int row = i / side;
+                int col = i % side;
+                
+                // Normalized -1..1
+                double nx = (side > 1) ? ((double)col / (side - 1) * 2.0 - 1.0) : 0;
+                double ny = (side > 1) ? ((double)row / (side - 1) * 2.0 - 1.0) : 0;
+                
+                // Jitter relative to cell size
+                if (params.distJitter > 0) {
+                    double cell = 2.0 / side;
+                    nx += (rng->generateDouble() - 0.5) * cell * (params.distJitter / 50.0);
+                    ny += (rng->generateDouble() - 0.5) * cell * (params.distJitter / 50.0);
+                }
+                
+                u = nx * maxRadius;
+                v = ny * maxRadius;
+            } else if (params.distType == 2) { // Spiral (Phyllotaxis)
+                // Golden Angle ~137.5 degrees
+                double angle = i * 2.3999632; 
+                double r = std::sqrt((double)i / params.count) * maxRadius;
+                
+                u = r * std::cos(angle);
+                v = r * std::sin(angle);
+                
+                // Jitter
+                if (params.distJitter > 0) {
+                    double jitterScale = maxRadius / 10.0;
+                    u += (rng->generateDouble() - 0.5) * jitterScale * (params.distJitter / 50.0);
+                    v += (rng->generateDouble() - 0.5) * jitterScale * (params.distJitter / 50.0);
+                }
+            } else { // Random (Default)
+                double rRand = rng->generateDouble(); 
+                double r;
+                if (params.falloff == 0) {
+                     r = std::sqrt(rRand);
+                } else {
+                     double p = 1.0 + (params.falloff / 20.0); 
+                     r = std::pow(rRand, p);
+                }
+                r *= maxRadius;
+                double theta = rng->generateDouble() * 2 * M_PI;
+
+                u = r * std::cos(theta);
+                v = r * std::sin(theta);
+                
+                // Apply Distribution Squareness (Only relevant for Random/Radial base)
+                if (params.distributionSquareness > 0) {
+                     double absCos = std::abs(std::cos(theta));
+                     double absSin = std::abs(std::sin(theta));
+                     double maxR_sq = (absCos > absSin) ? (1.0/absCos) : (1.0/absSin);
+                     if (std::isinf(maxR_sq)) maxR_sq = 1.0; // Safety
+                     
+                     double scaleF = 1.0 + (params.distributionSquareness / 100.0) * (maxR_sq - 1.0);
+                     u *= scaleF;
+                     v *= scaleF;
+                }
             }
 
             v *= roundnessFactor;

@@ -49,8 +49,21 @@ void MainWindow::setupUi() {
     addSetting("Opacity Jitter (%):", m_opacityJitterSlider, 0, 100, 50);
     addSetting("Roundness (%):", m_roundnessSlider, 1, 100, 100);
     addSetting("Angle (deg):", m_angleSlider, 0, 360, 0);
-    addSetting("Falloff (%):", m_falloffSlider, 0, 100, 0);
-    addSetting("Distribution Squareness:", m_distributionSquarenessSlider, 0, 100, 0);
+
+    // Distribution Type
+    QHBoxLayout* distRow = new QHBoxLayout();
+    distRow->addWidget(new QLabel("Distribution Type:"));
+    m_distTypeCombo = new QComboBox();
+    m_distTypeCombo->addItem("Random", 0);
+    m_distTypeCombo->addItem("Grid", 1);
+    m_distTypeCombo->addItem("Spiral", 2);
+    connect(m_distTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::generateBrush);
+    distRow->addWidget(m_distTypeCombo);
+    settingsLayout->addLayout(distRow);
+
+    addSetting("Grid/Spiral Jitter:", m_distJitterSlider, 0, 100, 0);
+    addSetting("Random Falloff (%):", m_falloffSlider, 0, 100, 0);
+    addSetting("Random Squareness:", m_distributionSquarenessSlider, 0, 100, 0);
 
     // Shape Synthesis UI
     QGroupBox* shapeGroup = new QGroupBox("Shape Synthesis", this);
@@ -188,8 +201,10 @@ void MainWindow::generateBrush() {
     params.angle = m_angleSlider->value();
     params.falloff = m_falloffSlider->value();
     params.distributionSquareness = m_distributionSquarenessSlider->value();
-    
-    params.shapeId = m_shapeCombo->currentIndex();
+    params.distType = m_distTypeCombo->currentData().toInt();
+    params.distJitter = m_distJitterSlider->value();
+
+    params.shapeId = m_shapeCombo->currentData().toInt();
     params.polygonSides = m_polygonSidesSlider->value();
     params.shapeEdgeFreq = m_shapeEdgeFreqSlider->value();
     params.shapeEdgeAmp = m_shapeEdgeAmpSlider->value();

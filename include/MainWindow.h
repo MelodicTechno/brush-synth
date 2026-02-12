@@ -36,6 +36,9 @@ private:
     QSlider* m_angleSlider;
     QSlider* m_falloffSlider;
     QSlider* m_distributionSquarenessSlider;
+    QComboBox* m_distTypeCombo;
+    QSlider* m_distJitterSlider;
+
     QSlider* m_canvasSizeSlider;
 
     // Shape Synthesis Controls
