@@ -12,6 +12,7 @@
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     setupUi();
+    m_isInitializing = false;
     generateBrush();
 }
 
@@ -63,27 +64,66 @@ void MainWindow::setupUi() {
     m_shapeCombo->addItem("Triangle", 1);
     m_shapeCombo->addItem("Square", 2);
     m_shapeCombo->addItem("Polygon", 3);
-    connect(m_shapeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::generateBrush);
+    m_shapeCombo->addItem("Wavetable", 4);
     shapeTypeRow->addWidget(m_shapeCombo);
     shapeLayout->addLayout(shapeTypeRow);
 
-    auto addShapeSetting = [&](QString name, QSlider*& slider, int min, int max, int val) {
-        QHBoxLayout* row = new QHBoxLayout();
-        row->addWidget(new QLabel(name));
+    // Helper for rows
+    auto addShapeRow = [&](QString text, QSlider*& slider, QLabel*& labelOut, QWidget*& rowOut, int min, int max, int val) {
+        rowOut = new QWidget();
+        QHBoxLayout* l = new QHBoxLayout(rowOut);
+        l->setContentsMargins(0,0,0,0);
+        labelOut = new QLabel(text);
+        l->addWidget(labelOut);
         slider = new QSlider(Qt::Horizontal);
         slider->setRange(min, max);
         slider->setValue(val);
         slider->setMinimumWidth(100);
         connect(slider, &QSlider::valueChanged, this, &MainWindow::generateBrush);
-        row->addWidget(slider);
-        shapeLayout->addLayout(row);
+        l->addWidget(slider);
+        shapeLayout->addWidget(rowOut);
     };
 
-    addShapeSetting("Polygon Sides (3-16):", m_polygonSidesSlider, 3, 16, 5);
-    addShapeSetting("Edge Frequency (FM Freq):", m_shapeEdgeFreqSlider, 0, 50, 0);
-    addShapeSetting("Edge Amplitude (FM Depth %):", m_shapeEdgeAmpSlider, 0, 100, 0);
-    addShapeSetting("Phase Warp Freq (Twist):", m_shapeWarpFreqSlider, 1, 20, 1);
-    addShapeSetting("Phase Warp Amp (Twist Strength):", m_shapeWarpAmpSlider, 0, 100, 0);
+    // Polygon Sides (Hidden by default unless Polygon)
+    QLabel* polyLabel;
+    addShapeRow("Polygon Sides (3-16):", m_polygonSidesSlider, polyLabel, m_polygonSidesRow, 3, 16, 5);
+
+    // Wave Threshold (Hidden by default unless Wavetable)
+    QLabel* threshLabel;
+    addShapeRow("Wavetable Threshold:", m_waveThresholdSlider, threshLabel, m_waveThresholdRow, 0, 100, 50);
+
+    // Standard Params (Always visible, labels change)
+    QWidget* dummyRow;
+    addShapeRow("Edge Frequency (FM Freq):", m_shapeEdgeFreqSlider, m_shapeEdgeFreqLabel, dummyRow, 0, 50, 0);
+    addShapeRow("Edge Amplitude (FM Depth %):", m_shapeEdgeAmpSlider, m_shapeEdgeAmpLabel, dummyRow, 0, 100, 0);
+    addShapeRow("Phase Warp Freq (Twist):", m_shapeWarpFreqSlider, m_shapeWarpFreqLabel, dummyRow, 1, 20, 1);
+    addShapeRow("Phase Warp Amp (Twist Strength):", m_shapeWarpAmpSlider, m_shapeWarpAmpLabel, dummyRow, 0, 100, 0);
+
+    // UI Update Logic
+    connect(m_shapeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](){
+        int idx = m_shapeCombo->currentData().toInt();
+        bool isPoly = (idx == 3);
+        bool isWave = (idx == 4);
+        
+        m_polygonSidesRow->setVisible(isPoly);
+        m_waveThresholdRow->setVisible(isWave);
+        
+        if (isWave) {
+             m_shapeEdgeFreqLabel->setText("Freq X:");
+             m_shapeEdgeAmpLabel->setText("FM Amount:");
+             m_shapeWarpFreqLabel->setText("Freq Y:");
+             m_shapeWarpAmpLabel->setText("Phase Y:");
+        } else {
+             m_shapeEdgeFreqLabel->setText("Edge Frequency (FM Freq):");
+             m_shapeEdgeAmpLabel->setText("Edge Amplitude (FM Depth %):");
+             m_shapeWarpFreqLabel->setText("Phase Warp Freq (Twist):");
+             m_shapeWarpAmpLabel->setText("Phase Warp Amp (Twist Strength):");
+        }
+        generateBrush();
+    });
+    
+    // Trigger initial state
+    emit m_shapeCombo->currentIndexChanged(0);
 
     settingsLayout->addWidget(shapeGroup);
 
@@ -135,6 +175,8 @@ void MainWindow::setupUi() {
 }
 
 void MainWindow::generateBrush() {
+    if (m_isInitializing) return;
+
     TextureGenerator::Parameters params;
     params.canvasSize = m_canvasSizeSlider->value();
     params.count = m_countSlider->value();
@@ -153,6 +195,7 @@ void MainWindow::generateBrush() {
     params.shapeEdgeAmp = m_shapeEdgeAmpSlider->value();
     params.shapeWarpFreq = m_shapeWarpFreqSlider->value();
     params.shapeWarpAmp = m_shapeWarpAmpSlider->value();
+    params.waveThreshold = m_waveThresholdSlider->value();
 
     params.particleAngle = m_particleAngleSlider->value();
     params.particleAngleJitter = m_particleAngleJitterSlider->value();

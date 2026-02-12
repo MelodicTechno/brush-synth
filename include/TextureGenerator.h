@@ -33,6 +33,9 @@ public:
         int shapeWarpFreq; // 1-20
         int shapeWarpAmp;  // 0-100 (Phase shift intensity)
 
+        // Wavetable Params
+        int waveThreshold; // 0-100 (Cutoff level)
+
         // Particle Transform Params
         int particleAngle; // 0-360
         int particleAngleJitter; // 0-100%
@@ -64,6 +67,71 @@ public:
         double margin = maxParticleRadius + 2.0; // +2 for safety
         double maxRadius = (params.canvasSize / 2.0) - margin;
         if (maxRadius < 1.0) maxRadius = 1.0;
+
+        // Pre-generate Wavetable Particle if needed
+        QImage wavetableImage;
+        if (params.shapeId == 4) {
+            int size = std::ceil(maxSize);
+            if (size < 1) size = 1;
+            wavetableImage = QImage(size, size, QImage::Format_ARGB32);
+            wavetableImage.fill(Qt::transparent);
+
+            // Wavetable Generation (FM Synthesis Style)
+            // Z = sin(u * fx + FM * sin(v * fy + phase))
+            // Cutoff at threshold
+            
+            double freqX = std::max(1.0, (double)params.shapeEdgeFreq);
+            double freqY = std::max(1.0, (double)params.shapeWarpFreq); // Modulator Freq
+            double fmAmount = params.shapeEdgeAmp / 20.0; // FM Index
+            double phaseY = params.shapeWarpAmp / 100.0 * 2.0 * M_PI;
+            double threshold = (params.waveThreshold / 50.0) - 1.0; // Map 0..100 to -1..1
+            
+            // Invert threshold logic: User likely wants "Amount of shape", so 100% means full square, 0% means nothing.
+            // Or "Threshold" means Cutoff Level.
+            // User said "Keep high parts". So High Threshold = Less pixels.
+            // Let's stick to "Threshold". 0 = Keep Everything (Full Square), 100 = Keep Nothing (Peaks only).
+            // So T = map(val, 0, 100, -1.0, 1.0).
+            
+            for (int y = 0; y < size; ++y) {
+                QRgb* scanLine = (QRgb*)wavetableImage.scanLine(y);
+                double v = (double)y / size * 2.0 * M_PI - M_PI; // -PI to PI
+                
+                for (int x = 0; x < size; ++x) {
+                    double u = (double)x / size * 2.0 * M_PI - M_PI; // -PI to PI
+                    
+                    // FM Formula
+                    // Modulator
+                    double mod = std::sin(v * freqY + phaseY);
+                    
+                    // Carrier
+                    double signal = std::sin(u * freqX + fmAmount * mod);
+                    
+                    // To make it more interesting, let's mix X and Y?
+                    // The above is strictly horizontal waves modulated vertically.
+                    // If we want "Cells", we need interference.
+                    // Let's add a vertical carrier component too?
+                    // signal = (sin(...) + sin(v * freqY)) / 2
+                    
+                    // User asked for "Wavetable Cross Section".
+                    // Let's try: Z = sin(u*fx) * sin(v*fy). This makes Grid.
+                    // With FM: Z = sin(u*fx + mod) * sin(v*fy + mod) ?
+                    
+                    // Let's go with the "Interference" model (Sum):
+                    // Z = (sin(u * fx + fm * mod) + sin(v * fy + phaseY)) / 2.0
+                    
+                    double z = (std::sin(u * freqX + fmAmount * mod) + std::sin(v * freqY + phaseY)) / 2.0;
+                    
+                    if (z > threshold) {
+                        // Anti-aliasing
+                        double edge = std::min(1.0, (z - threshold) * 10.0); // Soft edge
+                        int alpha = (int)(edge * 255);
+                        scanLine[x] = qRgba(0, 0, 0, alpha);
+                    } else {
+                        scanLine[x] = qRgba(0, 0, 0, 0);
+                    }
+                }
+            }
+        }
 
         double angleRad = params.angle * M_PI / 180.0;
         double cosA = std::cos(angleRad);
@@ -140,7 +208,13 @@ public:
             painter.scale(1.0, pRound); 
 
             // Shape Generation (Draw at 0,0)
-            if (params.shapeId == 0 && params.shapeEdgeFreq == 0) {
+            if (params.shapeId == 4) {
+                 // Wavetable Image
+                 // Draw centered at 0,0
+                 double offset = s / 2.0;
+                 // Draw the pre-generated image scaled to current particle size
+                 painter.drawImage(QRectF(-offset, -offset, s, s), wavetableImage);
+            } else if (params.shapeId == 0 && params.shapeEdgeFreq == 0) {
                 // Optimization for simple circle
                 painter.drawEllipse(QPointF(0, 0), radius, radius);
             } else {

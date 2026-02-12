@@ -40,14 +40,28 @@ private:
 
     // Shape Synthesis Controls
     QComboBox* m_shapeCombo;
+    QWidget* m_polygonSidesRow;
     QSlider* m_polygonSidesSlider;
+    
+    QLabel* m_shapeEdgeFreqLabel;
     QSlider* m_shapeEdgeFreqSlider;
+    
+    QLabel* m_shapeEdgeAmpLabel;
     QSlider* m_shapeEdgeAmpSlider;
+    
+    QLabel* m_shapeWarpFreqLabel;
     QSlider* m_shapeWarpFreqSlider;
+    
+    QLabel* m_shapeWarpAmpLabel;
     QSlider* m_shapeWarpAmpSlider;
+
+    QWidget* m_waveThresholdRow;
+    QSlider* m_waveThresholdSlider;
 
     // Particle Transform Controls
     QSlider* m_particleAngleSlider;
     QSlider* m_particleAngleJitterSlider;
     QSlider* m_particleRoundnessSlider;
+
+    bool m_isInitializing = true;
 };
