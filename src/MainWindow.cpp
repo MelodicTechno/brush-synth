@@ -78,8 +78,8 @@ void MainWindow::setupUi() {
     shapeTypeRow->addWidget(new QLabel(getStr("Shape Type:")));
     m_shapeCombo = new QComboBox();
     m_shapeCombo->addItem(getStr("Circle"), 0);
-    m_shapeCombo->addItem(getStr("Square"), 1);
-    m_shapeCombo->addItem(getStr("Triangle"), 2);
+    m_shapeCombo->addItem(getStr("Triangle"), 1);
+    m_shapeCombo->addItem(getStr("Square"), 2);
     m_shapeCombo->addItem(getStr("Polygon"), 3);
     m_shapeCombo->addItem(getStr("Wavetable"), 4);
     connect(m_shapeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::generateBrush);
