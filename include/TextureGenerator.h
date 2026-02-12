@@ -246,7 +246,9 @@ public:
             double finalX = centerX + xRot;
             double finalY = centerY + yRot;
 
-            QColor color(0, 0, 0, alpha);
+            // Use painter opacity to control transparency for both Shapes and Images
+            painter.setOpacity(alpha / 255.0);
+            QColor color(0, 0, 0, 255); 
             painter.setBrush(color);
             painter.setPen(Qt::NoPen);
 
