@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QClipboard>
 #include <QApplication>
+#include <QMimeData>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     setupUi();
@@ -62,8 +63,8 @@ void MainWindow::setupUi() {
     settingsLayout->addLayout(distRow);
 
     addSetting("Grid/Spiral Jitter:", m_distJitterSlider, 0, 100, 0);
-    addSetting("Random Falloff (%):", m_falloffSlider, 0, 100, 0);
-    addSetting("Random Squareness:", m_distributionSquarenessSlider, 0, 100, 0);
+    addSetting("Falloff (Density):", m_falloffSlider, 0, 100, 0);
+    addSetting("Squareness (Boundary):", m_distributionSquarenessSlider, 0, 100, 0);
 
     // Shape Synthesis UI
     QGroupBox* shapeGroup = new QGroupBox("Shape Synthesis", this);
@@ -230,7 +231,17 @@ void MainWindow::exportPng() {
 
 void MainWindow::copyToClipboard() {
     QClipboard *clipboard = QApplication::clipboard();
-    clipboard->setImage(m_brushImage);
-    // Optional: Feedback to user
-    // QMessageBox::information(this, "Copied", "Brush image copied to clipboard.");
+    QMimeData *mimeData = new QMimeData;
+    
+    // Set standard image format (Bitmap/DIB)
+    mimeData->setImageData(m_brushImage);
+    
+    // Also set PNG format for better transparency support in modern apps
+    QByteArray byteArray;
+    QBuffer buffer(&byteArray);
+    buffer.open(QIODevice::WriteOnly);
+    m_brushImage.save(&buffer, "PNG");
+    mimeData->setData("image/png", byteArray);
+    
+    clipboard->setMimeData(mimeData);
 }

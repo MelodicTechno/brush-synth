@@ -155,8 +155,9 @@ public:
             if (alpha > 255) alpha = 255;
 
             // Distribution Logic
-            double u, v;
-            
+            double u, v; // Normalized coords
+            double r_norm, theta;
+
             if (params.distType == 1) { // Grid
                 int side = std::ceil(std::sqrt(params.count));
                 if (side < 1) side = 1;
@@ -164,59 +165,80 @@ public:
                 int col = i % side;
                 
                 // Normalized -1..1
-                double nx = (side > 1) ? ((double)col / (side - 1) * 2.0 - 1.0) : 0;
-                double ny = (side > 1) ? ((double)row / (side - 1) * 2.0 - 1.0) : 0;
+                u = (side > 1) ? ((double)col / (side - 1) * 2.0 - 1.0) : 0;
+                v = (side > 1) ? ((double)row / (side - 1) * 2.0 - 1.0) : 0;
                 
-                // Jitter relative to cell size
                 if (params.distJitter > 0) {
                     double cell = 2.0 / side;
-                    nx += (rng->generateDouble() - 0.5) * cell * (params.distJitter / 50.0);
-                    ny += (rng->generateDouble() - 0.5) * cell * (params.distJitter / 50.0);
+                    u += (rng->generateDouble() - 0.5) * cell * (params.distJitter / 50.0);
+                    v += (rng->generateDouble() - 0.5) * cell * (params.distJitter / 50.0);
                 }
                 
-                u = nx * maxRadius;
-                v = ny * maxRadius;
+                r_norm = std::sqrt(u*u + v*v);
+                theta = std::atan2(v, u);
             } else if (params.distType == 2) { // Spiral (Phyllotaxis)
-                // Golden Angle ~137.5 degrees
                 double angle = i * 2.3999632; 
-                double r = std::sqrt((double)i / params.count) * maxRadius;
+                r_norm = std::sqrt((double)i / params.count);
                 
-                u = r * std::cos(angle);
-                v = r * std::sin(angle);
+                u = r_norm * std::cos(angle);
+                v = r_norm * std::sin(angle);
+                theta = angle;
                 
-                // Jitter
                 if (params.distJitter > 0) {
-                    double jitterScale = maxRadius / 10.0;
+                    double jitterScale = 0.1; 
                     u += (rng->generateDouble() - 0.5) * jitterScale * (params.distJitter / 50.0);
                     v += (rng->generateDouble() - 0.5) * jitterScale * (params.distJitter / 50.0);
+                    r_norm = std::sqrt(u*u + v*v);
+                    theta = std::atan2(v, u);
                 }
             } else { // Random (Default)
-                double rRand = rng->generateDouble(); 
-                double r;
-                if (params.falloff == 0) {
-                     r = std::sqrt(rRand);
-                } else {
-                     double p = 1.0 + (params.falloff / 20.0); 
-                     r = std::pow(rRand, p);
-                }
-                r *= maxRadius;
-                double theta = rng->generateDouble() * 2 * M_PI;
+                r_norm = std::sqrt(rng->generateDouble()); // Uniform area
+                theta = rng->generateDouble() * 2 * M_PI;
+                u = r_norm * std::cos(theta);
+                v = r_norm * std::sin(theta);
+            }
 
-                u = r * std::cos(theta);
-                v = r * std::sin(theta);
-                
-                // Apply Distribution Squareness (Only relevant for Random/Radial base)
-                if (params.distributionSquareness > 0) {
+            // 1. Falloff (Radial Warp) - Apply to all
+            if (params.falloff > 0) {
+                double p = 1.0 + (params.falloff / 20.0); 
+                double new_r = std::pow(r_norm, p);
+                if (r_norm > 1e-6) {
+                    double scale = new_r / r_norm;
+                    u *= scale;
+                    v *= scale;
+                    r_norm = new_r;
+                }
+            }
+
+            // 2. Squareness (Boundary Constraint)
+            // 0 = Circle, 100 = Square
+            if (params.distType == 1) { // Grid: Masking
+                if (params.distributionSquareness < 100) {
                      double absCos = std::abs(std::cos(theta));
                      double absSin = std::abs(std::sin(theta));
                      double maxR_sq = (absCos > absSin) ? (1.0/absCos) : (1.0/absSin);
-                     if (std::isinf(maxR_sq)) maxR_sq = 1.0; // Safety
+                     if (std::isinf(maxR_sq)) maxR_sq = 1.0;
+
+                     // Interpolate boundary: 0->1.0, 100->maxR_sq
+                     double limit = 1.0 + (params.distributionSquareness / 100.0) * (maxR_sq - 1.0);
+                     
+                     if (r_norm > limit) continue; // Discard point
+                }
+            } else { // Random/Spiral: Stretching
+                 if (params.distributionSquareness > 0) {
+                     double absCos = std::abs(std::cos(theta));
+                     double absSin = std::abs(std::sin(theta));
+                     double maxR_sq = (absCos > absSin) ? (1.0/absCos) : (1.0/absSin);
+                     if (std::isinf(maxR_sq)) maxR_sq = 1.0;
                      
                      double scaleF = 1.0 + (params.distributionSquareness / 100.0) * (maxR_sq - 1.0);
                      u *= scaleF;
                      v *= scaleF;
-                }
+                 }
             }
+
+            u *= maxRadius;
+            v *= maxRadius;
 
             v *= roundnessFactor;
             double xRot = u * cosA - v * sinA;
