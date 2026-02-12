@@ -17,12 +17,14 @@ include_directories(include)
 set(SOURCES
     src/main.cpp
     src/MainWindow.cpp
+    src/AppSettings.cpp
 )
 
 set(HEADERS
     include/MainWindow.h
     include/TextureGenerator.h
     include/PreviewWidget.h
+    include/AppSettings.h
 )
 
 if(WIN32)

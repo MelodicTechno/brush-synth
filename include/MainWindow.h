@@ -18,11 +18,15 @@
 #include <QDir>
 #include <QFileInfo>
 #include "PreviewWidget.h"
+#include "AppSettings.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    MainWindow(QWidget* parent = nullptr);
+    explicit MainWindow(QWidget* parent = nullptr);
+
+    void setLanguage(AppSettings::Language lang);
+    QString getStr(const QString& key);
 
 private slots:
     void generateBrush();
@@ -41,7 +45,7 @@ private:
     void deserializeSettings(const QJsonObject& json);
 
     QImage m_brushImage;
-    PreviewWidget* m_previewWidget;
+    PreviewWidget* m_previewWidget = nullptr;
     
     QSlider* m_countSlider;
     QSlider* m_sizeMeanSlider;

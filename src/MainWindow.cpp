@@ -10,6 +10,8 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QMimeData>
+#include <QMap>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     setupUi();
@@ -23,13 +25,13 @@ void MainWindow::setupUi() {
     QHBoxLayout* mainLayout = new QHBoxLayout(centralWidget);
 
     // Settings Panel
-    QGroupBox* settingsGroup = new QGroupBox("Settings", this);
+    QGroupBox* settingsGroup = new QGroupBox(getStr("Settings"), this);
     settingsGroup->setMinimumWidth(320); // Ensure panel is wide enough
     QVBoxLayout* settingsLayout = new QVBoxLayout(settingsGroup);
 
     auto addSetting = [&](QString name, QSlider*& slider, int min, int max, int val) {
         QHBoxLayout* row = new QHBoxLayout();
-        row->addWidget(new QLabel(name));
+        row->addWidget(new QLabel(getStr(name)));
         
         slider = new QSlider(Qt::Horizontal);
         slider->setRange(min, max);
@@ -51,11 +53,11 @@ void MainWindow::setupUi() {
     
     // Distribution Controls
     QHBoxLayout* distTypeRow = new QHBoxLayout();
-    distTypeRow->addWidget(new QLabel("Distribution:"));
+    distTypeRow->addWidget(new QLabel(getStr("Distribution:")));
     m_distTypeCombo = new QComboBox();
-    m_distTypeCombo->addItem("Random", 0);
-    m_distTypeCombo->addItem("Grid", 1);
-    m_distTypeCombo->addItem("Spiral", 2);
+    m_distTypeCombo->addItem(getStr("Random"), 0);
+    m_distTypeCombo->addItem(getStr("Grid"), 1);
+    m_distTypeCombo->addItem(getStr("Spiral"), 2);
     connect(m_distTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::generateBrush);
     distTypeRow->addWidget(m_distTypeCombo);
     settingsLayout->addLayout(distTypeRow);
@@ -69,17 +71,17 @@ void MainWindow::setupUi() {
     addSetting("Falloff (Density):", m_falloffSlider, 0, 100, 0); // 0 = uniform, 100 = strong center bias
 
     // Shape Group
-    QGroupBox* shapeGroup = new QGroupBox("Shape Synthesis", this);
+    QGroupBox* shapeGroup = new QGroupBox(getStr("Shape Synthesis"), this);
     QVBoxLayout* shapeLayout = new QVBoxLayout(shapeGroup);
     
     QHBoxLayout* shapeTypeRow = new QHBoxLayout();
-    shapeTypeRow->addWidget(new QLabel("Shape Type:"));
+    shapeTypeRow->addWidget(new QLabel(getStr("Shape Type:")));
     m_shapeCombo = new QComboBox();
-    m_shapeCombo->addItem("Circle", 0);
-    m_shapeCombo->addItem("Square", 1);
-    m_shapeCombo->addItem("Triangle", 2);
-    m_shapeCombo->addItem("Polygon", 3);
-    m_shapeCombo->addItem("Wavetable", 4);
+    m_shapeCombo->addItem(getStr("Circle"), 0);
+    m_shapeCombo->addItem(getStr("Square"), 1);
+    m_shapeCombo->addItem(getStr("Triangle"), 2);
+    m_shapeCombo->addItem(getStr("Polygon"), 3);
+    m_shapeCombo->addItem(getStr("Wavetable"), 4);
     connect(m_shapeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::generateBrush);
     shapeTypeRow->addWidget(m_shapeCombo);
     shapeLayout->addLayout(shapeTypeRow);
@@ -88,7 +90,7 @@ void MainWindow::setupUi() {
         QWidget* rowWidget = new QWidget();
         QHBoxLayout* row = new QHBoxLayout(rowWidget);
         row->setContentsMargins(0,0,0,0);
-        labelPtr = new QLabel(name);
+        labelPtr = new QLabel(getStr(name));
         row->addWidget(labelPtr);
         
         slider = new QSlider(Qt::Horizontal);
@@ -126,31 +128,32 @@ void MainWindow::setupUi() {
         m_waveThresholdRow->setVisible(isWave);
         
         if (isWave) {
-             m_shapeEdgeFreqLabel->setText("Freq X:");
-             m_shapeEdgeAmpLabel->setText("FM Amount:");
-             m_shapeWarpFreqLabel->setText("Freq Y:");
-             m_shapeWarpAmpLabel->setText("Phase Y:");
+             m_shapeEdgeFreqLabel->setText(getStr("Freq X:"));
+             m_shapeEdgeAmpLabel->setText(getStr("FM Amount:"));
+             m_shapeWarpFreqLabel->setText(getStr("Freq Y:"));
+             m_shapeWarpAmpLabel->setText(getStr("Phase Y:"));
         } else {
-             m_shapeEdgeFreqLabel->setText("Edge Frequency (FM Freq):");
-             m_shapeEdgeAmpLabel->setText("Edge Amplitude (FM Depth %):");
-             m_shapeWarpFreqLabel->setText("Phase Warp Freq (Twist):");
-             m_shapeWarpAmpLabel->setText("Phase Warp Amp (Twist Strength):");
+             m_shapeEdgeFreqLabel->setText(getStr("Edge Frequency (FM Freq):"));
+             m_shapeEdgeAmpLabel->setText(getStr("Edge Amplitude (FM Depth %):"));
+             m_shapeWarpFreqLabel->setText(getStr("Phase Warp Freq (Twist):"));
+             m_shapeWarpAmpLabel->setText(getStr("Phase Warp Amp (Twist Strength):"));
         }
         generateBrush();
     });
     
     // Trigger initial state
-    emit m_shapeCombo->currentIndexChanged(0);
+    // Moved to end of setupUi
+    // emit m_shapeCombo->currentIndexChanged(0);
 
     settingsLayout->addWidget(shapeGroup);
 
     // Particle Transform UI
-    QGroupBox* particleTransformGroup = new QGroupBox("Particle Transform", this);
+    QGroupBox* particleTransformGroup = new QGroupBox(getStr("Particle Transform"), this);
     QVBoxLayout* ptLayout = new QVBoxLayout(particleTransformGroup);
 
     auto addPtSetting = [&](QString name, QSlider*& slider, int min, int max, int val) {
         QHBoxLayout* row = new QHBoxLayout();
-        row->addWidget(new QLabel(name));
+        row->addWidget(new QLabel(getStr(name)));
         slider = new QSlider(Qt::Horizontal);
         slider->setRange(min, max);
         slider->setValue(val);
@@ -168,17 +171,17 @@ void MainWindow::setupUi() {
 
     // Remove Manual Generate Button if real-time is fast enough, 
     // but keeping it is fine. User asked for real-time preview logic.
-    QPushButton* generateBtn = new QPushButton("Generate", this);
+    QPushButton* generateBtn = new QPushButton(getStr("Generate"), this);
     connect(generateBtn, &QPushButton::clicked, this, &MainWindow::generateBrush);
     settingsLayout->addWidget(generateBtn);
     
     settingsLayout->addStretch();
 
-    QPushButton* exportPngBtn = new QPushButton("Export PNG", this);
+    QPushButton* exportPngBtn = new QPushButton(getStr("Export PNG"), this);
     connect(exportPngBtn, &QPushButton::clicked, this, &MainWindow::exportPng);
     settingsLayout->addWidget(exportPngBtn);
 
-    QPushButton* copyClipboardBtn = new QPushButton("Copy to Clipboard", this);
+    QPushButton* copyClipboardBtn = new QPushButton(getStr("Copy to Clipboard"), this);
     connect(copyClipboardBtn, &QPushButton::clicked, this, &MainWindow::copyToClipboard);
     settingsLayout->addWidget(copyClipboardBtn);
 
@@ -191,13 +194,13 @@ void MainWindow::setupUi() {
     QVBoxLayout* genLayout = new QVBoxLayout(generatorTab);
     genLayout->setContentsMargins(5,5,5,5);
     genLayout->addWidget(settingsGroup);
-    m_tabWidget->addTab(generatorTab, "Generator");
+    m_tabWidget->addTab(generatorTab, getStr("Generator"));
     
     // Tab 2: Presets
     QWidget* presetsTab = new QWidget();
     QVBoxLayout* presetsLayout = new QVBoxLayout(presetsTab);
     
-    presetsLayout->addWidget(new QLabel("Saved Presets:"));
+    presetsLayout->addWidget(new QLabel(getStr("Saved Presets:")));
     m_presetList = new QListWidget();
     connect(m_presetList, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem*){
         loadPreset();
@@ -205,15 +208,15 @@ void MainWindow::setupUi() {
     presetsLayout->addWidget(m_presetList);
     
     QHBoxLayout* nameRow = new QHBoxLayout();
-    nameRow->addWidget(new QLabel("Name:"));
+    nameRow->addWidget(new QLabel(getStr("Name:")));
     m_presetNameEdit = new QLineEdit();
     nameRow->addWidget(m_presetNameEdit);
     presetsLayout->addLayout(nameRow);
     
     QHBoxLayout* btnRow = new QHBoxLayout();
-    m_savePresetButton = new QPushButton("Save");
-    m_loadPresetButton = new QPushButton("Load");
-    m_deletePresetButton = new QPushButton("Delete");
+    m_savePresetButton = new QPushButton(getStr("Save"));
+    m_loadPresetButton = new QPushButton(getStr("Load"));
+    m_deletePresetButton = new QPushButton(getStr("Delete"));
     
     connect(m_savePresetButton, &QPushButton::clicked, this, &MainWindow::savePreset);
     connect(m_loadPresetButton, &QPushButton::clicked, this, &MainWindow::loadPreset);
@@ -224,13 +227,37 @@ void MainWindow::setupUi() {
     btnRow->addWidget(m_deletePresetButton);
     presetsLayout->addLayout(btnRow);
     
-    m_refreshPresetsButton = new QPushButton("Refresh List");
+    m_refreshPresetsButton = new QPushButton(getStr("Refresh List"));
     connect(m_refreshPresetsButton, &QPushButton::clicked, this, &MainWindow::refreshPresets);
     presetsLayout->addWidget(m_refreshPresetsButton);
     
     presetsLayout->addStretch();
-    m_tabWidget->addTab(presetsTab, "Presets");
+    m_tabWidget->addTab(presetsTab, getStr("Presets"));
     
+    // Tab 3: Settings
+    QWidget* settingsTab = new QWidget();
+    QVBoxLayout* settingsTabLayout = new QVBoxLayout(settingsTab);
+    
+    QHBoxLayout* langRow = new QHBoxLayout();
+    langRow->addWidget(new QLabel(getStr("Language:")));
+    QComboBox* langCombo = new QComboBox();
+    langCombo->addItem("English", AppSettings::English);
+    langCombo->addItem("中文", AppSettings::Chinese);
+    langCombo->setCurrentIndex(AppSettings::instance().getLanguage() == AppSettings::English ? 0 : 1);
+    
+    connect(langCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index){
+        // Defer the recreation to avoid deleting sender during signal emission
+        QTimer::singleShot(0, this, [this, index](){
+             setLanguage((AppSettings::Language)index);
+        });
+    });
+    
+    langRow->addWidget(langCombo);
+    settingsTabLayout->addLayout(langRow);
+    settingsTabLayout->addStretch();
+    
+    m_tabWidget->addTab(settingsTab, getStr("Settings"));
+
     // Initial refresh
     refreshPresets();
 
@@ -240,11 +267,15 @@ void MainWindow::setupUi() {
     m_previewWidget = new PreviewWidget(this);
     mainLayout->addWidget(m_previewWidget, 3);
     
+    // Trigger initial state logic (must be after UI setup)
+    emit m_shapeCombo->currentIndexChanged(0);
+    
     resize(800, 600);
 }
 
 void MainWindow::generateBrush() {
     if (m_isInitializing) return;
+    if (!m_previewWidget) return;
 
     TextureGenerator::Parameters params;
     params.canvasSize = m_canvasSizeSlider->value();
@@ -277,10 +308,10 @@ void MainWindow::generateBrush() {
 }
 
 void MainWindow::exportPng() {
-    QString fileName = QFileDialog::getSaveFileName(this, "Export PNG", "", "PNG Files (*.png)");
+    QString fileName = QFileDialog::getSaveFileName(this, getStr("Export PNG"), "", "PNG Files (*.png)");
     if (!fileName.isEmpty()) {
         m_brushImage.save(fileName);
-        QMessageBox::information(this, "Success", "Brush exported successfully!");
+        QMessageBox::information(this, getStr("Success"), getStr("Brush exported successfully!"));
     }
 }
 
@@ -373,7 +404,7 @@ void MainWindow::deserializeSettings(const QJsonObject& json) {
 void MainWindow::savePreset() {
     QString name = m_presetNameEdit->text().trimmed();
     if (name.isEmpty()) {
-        QMessageBox::warning(this, "Error", "Preset name cannot be empty.");
+        QMessageBox::warning(this, getStr("Error"), getStr("Preset name cannot be empty."));
         return;
     }
     
@@ -382,7 +413,7 @@ void MainWindow::savePreset() {
     
     QFile file(dir.filePath(name + ".json"));
     if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::warning(this, "Error", "Cannot save preset file.");
+        QMessageBox::warning(this, getStr("Error"), getStr("Cannot save preset file."));
         return;
     }
     
@@ -413,7 +444,7 @@ void MainWindow::deletePreset() {
     if (!item) return;
     
     QString name = item->text();
-    if (QMessageBox::question(this, "Confirm", "Delete preset '" + name + "'?", QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+    if (QMessageBox::question(this, getStr("Confirm"), getStr("Delete preset?") + " '" + name + "'?", QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
         QFile::remove("presets/" + name + ".json");
         refreshPresets();
     }
@@ -428,4 +459,83 @@ void MainWindow::refreshPresets() {
     for (const QString& f : files) {
         m_presetList->addItem(QFileInfo(f).baseName());
     }
+}
+
+QString MainWindow::getStr(const QString& key) {
+    if (AppSettings::instance().getLanguage() == AppSettings::English) return key;
+    
+    static const QMap<QString, QString> cnMap = {
+        {"Settings", "设置"},
+        {"Canvas Size:", "画布尺寸:"},
+        {"Noise Count:", "粒子数量:"},
+        {"Size Mean:", "大小均值:"},
+        {"Size Jitter (%):", "大小抖动 (%):"},
+        {"Opacity Mean:", "不透明度均值:"},
+        {"Opacity Jitter (%):", "不透明度抖动 (%):"},
+        {"Distribution:", "分布模式:"},
+        {"Dist Jitter/Spread:", "分布抖动/扩散:"},
+        {"Roundness (Scale Y):", "圆度 (Y轴缩放):"},
+        {"Angle:", "角度:"},
+        {"Squareness (Boundary):", "方度 (边界):"},
+        {"Falloff (Density):", "衰减 (密度):"},
+        {"Shape Synthesis", "形状合成"},
+        {"Shape Type:", "形状类型:"},
+        {"Polygon Sides (3-16):", "多边形边数 (3-16):"},
+        {"Wavetable Threshold:", "波表阈值:"},
+        {"Edge Frequency (FM Freq):", "边缘频率 (FM频率):"},
+        {"Edge Amplitude (FM Depth %):", "边缘幅度 (FM深度%):"},
+        {"Phase Warp Freq (Twist):", "相位扭曲频率:"},
+        {"Phase Warp Amp (Twist Strength):", "相位扭曲强度:"},
+        {"Freq X:", "X轴频率:"},
+        {"FM Amount:", "FM强度:"},
+        {"Freq Y:", "Y轴频率:"},
+        {"Phase Y:", "Y轴相位:"},
+        {"Particle Transform", "粒子变换"},
+        {"Particle Angle (deg):", "粒子角度 (度):"},
+        {"Angle Jitter (%):", "角度抖动 (%):"},
+        {"Roundness (Stretch %):", "圆度 (拉伸 %):"},
+        {"Generate", "生成"},
+        {"Export PNG", "导出 PNG"},
+        {"Copy to Clipboard", "复制到剪贴板"},
+        {"Saved Presets:", "已保存预设:"},
+        {"Name:", "名称:"},
+        {"Save", "保存"},
+        {"Load", "加载"},
+        {"Delete", "删除"},
+        {"Refresh List", "刷新列表"},
+        {"Generator", "生成器"},
+        {"Presets", "预设"},
+        {"Random", "随机"},
+        {"Grid", "网格"},
+        {"Spiral", "螺旋"},
+        {"Circle", "圆形"},
+        {"Square", "方形"},
+        {"Triangle", "三角形"},
+        {"Polygon", "多边形"},
+        {"Wavetable", "波表"},
+        {"Language:", "语言:"},
+        {"Success", "成功"},
+        {"Brush exported successfully!", "笔刷导出成功！"},
+        {"Error", "错误"},
+        {"Preset name cannot be empty.", "预设名称不能为空。"},
+        {"Cannot save preset file.", "无法保存预设文件。"},
+        {"Confirm", "确认"},
+        {"Delete preset?", "确认删除预设？"}
+    };
+    
+    return cnMap.value(key, key);
+}
+
+void MainWindow::setLanguage(AppSettings::Language lang) {
+    if (AppSettings::instance().getLanguage() == lang) return;
+    
+    QJsonObject currentSettings = serializeSettings();
+    AppSettings::instance().setLanguage(lang);
+    
+    m_isInitializing = true;
+    delete centralWidget();
+    m_previewWidget = nullptr;
+    setupUi();
+    
+    deserializeSettings(currentSettings);
 }
