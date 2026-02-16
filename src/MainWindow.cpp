@@ -308,10 +308,18 @@ void MainWindow::generateBrush() {
 }
 
 void MainWindow::exportPng() {
+    if (m_brushImage.isNull()) {
+        QMessageBox::warning(this, getStr("Error"), getStr("No brush image to export. Generate a brush first."));
+        return;
+    }
+    
     QString fileName = QFileDialog::getSaveFileName(this, getStr("Export PNG"), "", "PNG Files (*.png)");
     if (!fileName.isEmpty()) {
-        m_brushImage.save(fileName);
-        QMessageBox::information(this, getStr("Success"), getStr("Brush exported successfully!"));
+        if (m_brushImage.save(fileName, "PNG")) {
+            QMessageBox::information(this, getStr("Success"), getStr("Brush exported successfully!"));
+        } else {
+            QMessageBox::critical(this, getStr("Error"), getStr("Failed to save PNG file. Check permissions and disk space."));
+        }
     }
 }
 

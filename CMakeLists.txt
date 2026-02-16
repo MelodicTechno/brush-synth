@@ -8,7 +8,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(CMAKE_PREFIX_PATH "E:/qt/6.10.2/mingw_64")
+# set(CMAKE_PREFIX_PATH "E:/qt/6.10.2/mingw_64")
+set(CMAKE_PREFIX_PATH "/home/ihs/Qt/6.10.2/gcc_64")
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Gui Core)
 
